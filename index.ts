@@ -2,6 +2,8 @@ import makeWASocket, { DisconnectReason, useMultiFileAuthState } from '@whiskeys
 import { Boom } from '@hapi/boom'
 import * as fs from 'fs'
 
+const URL = require("url")
+
 const NodeCache = require("node-cache")
 
 const data_tour = fs.readFileSync("./data/tour.txt", "utf-8");
@@ -47,6 +49,9 @@ async function connectToWhatsApp () {
             const upsert = events['messages.upsert']
             console.log('recv messages ', upsert)
 
+            const url = new URL("https://static.staticsave.com/iqbal/bahan-txt.txt")
+            const custom_data = fs.readFileSync(url, "utf-8")
+
             if(upsert.type === 'notify') {
                 for(const msg of upsert.messages) {
                     if(!msg.key.fromMe) {
@@ -54,6 +59,7 @@ async function connectToWhatsApp () {
                         await sock!.readMessages([msg.key])
                         await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_tour}`})
                         await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_services}`})
+                        await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data}`})
                     }
                 }
             }
