@@ -18,23 +18,6 @@ async function connectToWhatsApp () {
         generateHighQualityLinkPreview: true,
         msgRetryCounterCache,
     })
-
-    sock.ev.on('creds.update', saveCreds)
-    sock.ev.on('connection.update', ({ connection, lastDisconnect, receivedPendingNotifications = false}) => {
-        if(connection === 'close') {
-            const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut
-            console.log('connection closed due to ', lastDisconnect?.error, ', reconnecting ', shouldReconnect)
-            // reconnect if not logged out
-            if(shouldReconnect) {
-                connectToWhatsApp()
-            }
-        } else if(connection === 'open') {
-            console.log('opened connection')
-            receivedPendingNotifications = false
-        }
-    })
-
-
     sock.ev.process(
         async (events) => {
           if(events["connection.update"]) {

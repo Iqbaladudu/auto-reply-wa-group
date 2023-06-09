@@ -58,23 +58,6 @@ function connectToWhatsApp() {
                         generateHighQualityLinkPreview: true,
                         msgRetryCounterCache: msgRetryCounterCache,
                     });
-                    sock.ev.on('creds.update', saveCreds);
-                    sock.ev.on('connection.update', function (_a) {
-                        var _b, _c;
-                        var connection = _a.connection, lastDisconnect = _a.lastDisconnect, _d = _a.receivedPendingNotifications, receivedPendingNotifications = _d === void 0 ? false : _d;
-                        if (connection === 'close') {
-                            var shouldReconnect = ((_c = (_b = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _b === void 0 ? void 0 : _b.output) === null || _c === void 0 ? void 0 : _c.statusCode) !== baileys_1.DisconnectReason.loggedOut;
-                            console.log('connection closed due to ', lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error, ', reconnecting ', shouldReconnect);
-                            // reconnect if not logged out
-                            if (shouldReconnect) {
-                                connectToWhatsApp();
-                            }
-                        }
-                        else if (connection === 'open') {
-                            console.log('opened connection');
-                            receivedPendingNotifications = false;
-                        }
-                    });
                     sock.ev.process(function (events) { return __awaiter(_this, void 0, void 0, function () {
                         var update, connection, lastDisconnect, shouldReconnect, upsert, _i, _a, msg;
                         var _b, _c;
@@ -106,16 +89,16 @@ function connectToWhatsApp() {
                                     if (events["labels.association"]) {
                                         console.log(events["labels.association"]);
                                     }
-                                    if (!events['messages.upsert']) return [3 /*break*/, 8];
+                                    if (!events['messages.upsert']) return [3 /*break*/, 7];
                                     upsert = events['messages.upsert'];
                                     console.log('recv messages ', upsert);
-                                    if (!(upsert.type === 'notify')) return [3 /*break*/, 8];
+                                    if (!(upsert.type === 'notify')) return [3 /*break*/, 7];
                                     _i = 0, _a = upsert.messages;
                                     _d.label = 3;
                                 case 3:
-                                    if (!(_i < _a.length)) return [3 /*break*/, 8];
+                                    if (!(_i < _a.length)) return [3 /*break*/, 7];
                                     msg = _a[_i];
-                                    if (!!msg.key.fromMe) return [3 /*break*/, 7];
+                                    if (!!msg.key.fromMe) return [3 /*break*/, 6];
                                     console.log('replying to', msg.key.remoteJid);
                                     return [4 /*yield*/, sock.readMessages([msg.key])];
                                 case 4:
@@ -123,14 +106,11 @@ function connectToWhatsApp() {
                                     return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(data_tour) })];
                                 case 5:
                                     _d.sent();
-                                    return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(data_services) })];
+                                    _d.label = 6;
                                 case 6:
-                                    _d.sent();
-                                    _d.label = 7;
-                                case 7:
                                     _i++;
                                     return [3 /*break*/, 3];
-                                case 8: return [2 /*return*/];
+                                case 7: return [2 /*return*/];
                             }
                         });
                     }); });
