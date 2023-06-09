@@ -1,13 +1,9 @@
 import makeWASocket, { DisconnectReason, useMultiFileAuthState } from '@whiskeysockets/baileys'
 import { Boom } from '@hapi/boom'
 import * as fs from 'fs'
-
-const URL = require("url")
-
 const NodeCache = require("node-cache")
-
-const data_tour = fs.readFileSync("./data/tour.txt", "utf-8");
-const data_services = fs.readFileSync("./data/services.txt", "utf-8")
+const custom_data1 = fs.readFileSync("./data/random_satu.txt", "utf-8")
+const custom_data2 = fs.readFileSync("./data/random_dua.txt", "utf-8")
 
 const msgRetryCounterCache = new NodeCache()
 
@@ -47,19 +43,17 @@ async function connectToWhatsApp () {
 
           if(events['messages.upsert']) {
             const upsert = events['messages.upsert']
-            console.log('recv messages ', upsert)
-
-            const url = new URL("https://static.staticsave.com/iqbal/bahan-txt.txt")
-            const custom_data = fs.readFileSync(url, "utf-8")
+            console.log('recv messages ', upsert);
 
             if(upsert.type === 'notify') {
                 for(const msg of upsert.messages) {
                     if(!msg.key.fromMe) {
                         console.log('replying to', msg.key.remoteJid)
                         await sock!.readMessages([msg.key])
-                        await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_tour}`})
-                        await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_services}`})
-                        await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data}`})
+                        await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
+                        await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data2}`})
+                        // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_tour}`})
+                        // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_services}`})
                     }
                 }
             }

@@ -39,8 +39,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var baileys_1 = require("@whiskeysockets/baileys");
 var fs = require("fs");
 var NodeCache = require("node-cache");
-var data_tour = fs.readFileSync("./data/tour.txt", "utf-8");
-var data_services = fs.readFileSync("./data/services.txt", "utf-8");
+var custom_data1 = fs.readFileSync("./data/random_satu.txt", "utf-8");
+var custom_data2 = fs.readFileSync("./data/random_dua.txt", "utf-8");
 var msgRetryCounterCache = new NodeCache();
 function connectToWhatsApp() {
     return __awaiter(this, void 0, void 0, function () {
@@ -103,10 +103,13 @@ function connectToWhatsApp() {
                                     return [4 /*yield*/, sock.readMessages([msg.key])];
                                 case 4:
                                     _d.sent();
-                                    return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(data_tour) })];
+                                    return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(custom_data1) })];
                                 case 5:
                                     _d.sent();
-                                    return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(data_services) })];
+                                    return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(custom_data2) })
+                                        // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_tour}`})
+                                        // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_services}`})
+                                    ];
                                 case 6:
                                     _d.sent();
                                     _d.label = 7;
