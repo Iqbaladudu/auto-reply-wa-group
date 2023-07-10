@@ -51,7 +51,7 @@ async function connectToWhatsApp () {
                         console.log('replying to', msg.key.remoteJid)
                         await sock!.readMessages([msg.key])
                         await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
-                        await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data2}`})
+                        // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data2}`})
                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_tour}`})
                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_services}`})
                     }
