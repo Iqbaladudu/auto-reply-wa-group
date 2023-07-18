@@ -2,8 +2,10 @@ import makeWASocket, { DisconnectReason, useMultiFileAuthState } from '@whiskeys
 import { Boom } from '@hapi/boom'
 import * as fs from 'fs'
 const NodeCache = require("node-cache")
+
 const custom_data1 = fs.readFileSync("./data/random_satu.txt", "utf-8")
 const custom_data2 = fs.readFileSync("./data/random_dua.txt", "utf-8")
+const custom_data3 = fs.readFileSync("./data/random_tiga.txt", "utf-8")
 
 const msgRetryCounterCache = new NodeCache()
 
@@ -51,7 +53,7 @@ async function connectToWhatsApp () {
                         console.log('replying to', msg.key.remoteJid)
                         await sock!.readMessages([msg.key])
                         await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
-                        // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data2}`})
+                        await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data3}`})
                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_tour}`})
                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_services}`})
                     }
