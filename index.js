@@ -41,6 +41,8 @@ var fs = require("fs");
 var NodeCache = require("node-cache");
 var custom_data1 = fs.readFileSync("./data/random_satu.txt", "utf-8");
 var custom_data2 = fs.readFileSync("./data/random_dua.txt", "utf-8");
+var custom_data3 = fs.readFileSync("./data/random_tiga.txt", "utf-8");
+var custom_data4 = fs.readFileSync("./data/random_empat.txt", "utf-8");
 var msgRetryCounterCache = new NodeCache();
 function connectToWhatsApp() {
     return __awaiter(this, void 0, void 0, function () {
@@ -106,7 +108,7 @@ function connectToWhatsApp() {
                                     return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(custom_data1) })];
                                 case 5:
                                     _d.sent();
-                                    return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(custom_data2) })
+                                    return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(custom_data4) })
                                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_tour}`})
                                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_services}`})
                                     ];
