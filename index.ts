@@ -7,10 +7,7 @@ const custom_data1 = fs.readFileSync("./data/random_satu.txt", "utf-8")
 const custom_data2 = fs.readFileSync("./data/random_dua.txt", "utf-8")
 const custom_data3 = fs.readFileSync("./data/random_tiga.txt", "utf-8")
 const custom_data4 = fs.readFileSync("./data/random_empat.txt", "utf-8")
-<<<<<<< HEAD
 const custom_data5 = fs.readFileSync("./data/random_lima.txt", "utf-8")
-=======
->>>>>>> fc0d37d959704feb41507a80298e0380364713e7
 
 const msgRetryCounterCache = new NodeCache()
 
@@ -22,6 +19,7 @@ async function connectToWhatsApp () {
         auth: state,
         generateHighQualityLinkPreview: true,
         msgRetryCounterCache,
+        defaultQueryTimeoutMs: undefined,
     })
     sock.ev.process(
         async (events) => {
@@ -32,13 +30,22 @@ async function connectToWhatsApp () {
                 const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut
                 console.log('connection closed due to ', lastDisconnect?.error, ', reconnecting ', shouldReconnect)
                 // reconnect if not logged out
-                if(shouldReconnect) {
-                    connectToWhatsApp()
+                if(shouldReconnect || (lastDisconnect?.error as Boom)?.output?.statusCode === DisconnectReason.timedOut) {
+                  connectToWhatsApp()
+                } else if((lastDisconnect?.error as Boom)?.output?.statusCode === DisconnectReason.loggedOut) {
+                  fs.rmSync('./auth_info_baileys', { recursive: true })
+                  // this.connectToWhatsApp()
+                  // this.sock.printQRIfNecessaryListener()
                 }
-            } else if(connection === 'open') {
-                console.log('opened connection')
-                update.receivedPendingNotifications = false
-            }
+              } else if(connection === 'open') {
+                fs.writeFile('./qrdata.txt', '', (err) => {
+                  if (err) {
+                    console.error('An error occurred while creating the file:', err)
+                    return
+                  }
+                  console.log('File created successfully!')
+                })
+              }
           }
           if(events["connection.update"]) {
             await saveCreds()
@@ -57,12 +64,9 @@ async function connectToWhatsApp () {
                     if(!msg.key.fromMe) {
                         console.log('replying to', msg.key.remoteJid)
                         await sock!.readMessages([msg.key])
-                        await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
-<<<<<<< HEAD
-                        await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
-=======
+                        // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
+                        // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
                         await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data4}`})
->>>>>>> fc0d37d959704feb41507a80298e0380364713e7
                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_tour}`})
                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_services}`})
                     }
