@@ -60,12 +60,13 @@ function connectToWhatsApp() {
                         auth: state,
                         generateHighQualityLinkPreview: true,
                         msgRetryCounterCache: msgRetryCounterCache,
+                        defaultQueryTimeoutMs: undefined,
                     });
                     sock.ev.process(function (events) { return __awaiter(_this, void 0, void 0, function () {
                         var update, connection, lastDisconnect, shouldReconnect, upsert, _i, _a, msg;
-                        var _b, _c;
-                        return __generator(this, function (_d) {
-                            switch (_d.label) {
+                        var _b, _c, _d, _e, _f, _g, _h;
+                        return __generator(this, function (_j) {
+                            switch (_j.label) {
                                 case 0:
                                     if (events["connection.update"]) {
                                         update = events["connection.update"];
@@ -74,56 +75,66 @@ function connectToWhatsApp() {
                                             shouldReconnect = ((_c = (_b = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _b === void 0 ? void 0 : _b.output) === null || _c === void 0 ? void 0 : _c.statusCode) !== baileys_1.DisconnectReason.loggedOut;
                                             console.log('connection closed due to ', lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error, ', reconnecting ', shouldReconnect);
                                             // reconnect if not logged out
-                                            if (shouldReconnect) {
+                                            if (shouldReconnect || ((_e = (_d = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _d === void 0 ? void 0 : _d.output) === null || _e === void 0 ? void 0 : _e.statusCode) === baileys_1.DisconnectReason.timedOut) {
                                                 connectToWhatsApp();
+                                            }
+                                            else if (((_g = (_f = lastDisconnect === null || lastDisconnect === void 0 ? void 0 : lastDisconnect.error) === null || _f === void 0 ? void 0 : _f.output) === null || _g === void 0 ? void 0 : _g.statusCode) === baileys_1.DisconnectReason.loggedOut) {
+                                                fs.rmSync('./auth_info_baileys', { recursive: true });
+                                                // this.connectToWhatsApp()
+                                                // this.sock.printQRIfNecessaryListener()
                                             }
                                         }
                                         else if (connection === 'open') {
-                                            console.log('opened connection');
-                                            update.receivedPendingNotifications = false;
+                                            fs.writeFile('./qrdata.txt', '', function (err) {
+                                                if (err) {
+                                                    console.error('An error occurred while creating the file:', err);
+                                                    return;
+                                                }
+                                                console.log('File created successfully!');
+                                            });
                                         }
                                     }
                                     if (!events["connection.update"]) return [3 /*break*/, 2];
                                     return [4 /*yield*/, saveCreds()];
                                 case 1:
-                                    _d.sent();
-                                    _d.label = 2;
+                                    _j.sent();
+                                    _j.label = 2;
                                 case 2:
                                     if (events["labels.association"]) {
                                         console.log(events["labels.association"]);
                                     }
-                                    if (!events['messages.upsert']) return [3 /*break*/, 7];
+                                    if (!events['messages.upsert']) return [3 /*break*/, 8];
                                     upsert = events['messages.upsert'];
                                     console.log('recv messages ', upsert);
-                                    if (!(upsert.type === 'notify')) return [3 /*break*/, 7];
+                                    if (!(upsert.type === 'notify')) return [3 /*break*/, 8];
                                     _i = 0, _a = upsert.messages;
-                                    _d.label = 3;
+                                    _j.label = 3;
                                 case 3:
-                                    if (!(_i < _a.length)) return [3 /*break*/, 7];
+                                    if (!(_i < _a.length)) return [3 /*break*/, 8];
                                     msg = _a[_i];
-                                    if (!!msg.key.fromMe) return [3 /*break*/, 6];
+                                    if (!(!msg.key.fromMe && ((_h = msg.key.remoteJid) === null || _h === void 0 ? void 0 : _h.endsWith("g.us")))) return [3 /*break*/, 7];
                                     console.log('replying to', msg.key.remoteJid);
                                     return [4 /*yield*/, sock.readMessages([msg.key])
                                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
-                                        // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
                                     ];
                                 case 4:
-                                    _d.sent();
+                                    _j.sent();
                                     // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
-                                    // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
+                                    return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(custom_data5) })];
+                                case 5:
+                                    // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
+                                    _j.sent();
                                     return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(custom_data4) })
                                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_tour}`})
                                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_services}`})
                                     ];
-                                case 5:
-                                    // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
-                                    // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
-                                    _d.sent();
-                                    _d.label = 6;
                                 case 6:
+                                    _j.sent();
+                                    _j.label = 7;
+                                case 7:
                                     _i++;
                                     return [3 /*break*/, 3];
-                                case 7: return [2 /*return*/];
+                                case 8: return [2 /*return*/];
                             }
                         });
                     }); });
