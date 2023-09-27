@@ -42,8 +42,6 @@ var NodeCache = require("node-cache");
 var custom_data1 = fs.readFileSync("./data/random_satu.txt", "utf-8");
 var custom_data2 = fs.readFileSync("./data/random_dua.txt", "utf-8");
 var custom_data3 = fs.readFileSync("./data/random_tiga.txt", "utf-8");
-var custom_data4 = fs.readFileSync("./data/random_empat.txt", "utf-8");
-var custom_data5 = fs.readFileSync("./data/random_lima.txt", "utf-8");
 var msgRetryCounterCache = new NodeCache();
 function connectToWhatsApp() {
     return __awaiter(this, void 0, void 0, function () {
@@ -63,7 +61,7 @@ function connectToWhatsApp() {
                         defaultQueryTimeoutMs: undefined,
                     });
                     sock.ev.process(function (events) { return __awaiter(_this, void 0, void 0, function () {
-                        var update, connection, lastDisconnect, shouldReconnect, upsert, _i, _a, msg;
+                        var update, connection, lastDisconnect, shouldReconnect, upsert, _i, _a, msg, custom_data4, custom_data5;
                         var _b, _c, _d, _e, _f, _g, _h;
                         return __generator(this, function (_j) {
                             switch (_j.label) {
@@ -103,38 +101,40 @@ function connectToWhatsApp() {
                                     if (events["labels.association"]) {
                                         console.log(events["labels.association"]);
                                     }
-                                    if (!events['messages.upsert']) return [3 /*break*/, 8];
+                                    if (!events['messages.upsert']) return [3 /*break*/, 7];
                                     upsert = events['messages.upsert'];
                                     console.log('recv messages ', upsert);
-                                    if (!(upsert.type === 'notify')) return [3 /*break*/, 8];
+                                    if (!(upsert.type === 'notify')) return [3 /*break*/, 7];
                                     _i = 0, _a = upsert.messages;
                                     _j.label = 3;
                                 case 3:
-                                    if (!(_i < _a.length)) return [3 /*break*/, 8];
+                                    if (!(_i < _a.length)) return [3 /*break*/, 7];
                                     msg = _a[_i];
-                                    if (!(!msg.key.fromMe && ((_h = msg.key.remoteJid) === null || _h === void 0 ? void 0 : _h.endsWith("g.us")))) return [3 /*break*/, 7];
+                                    if (!(!msg.key.fromMe && ((_h = msg.key.remoteJid) === null || _h === void 0 ? void 0 : _h.endsWith("g.us")))) return [3 /*break*/, 6];
+                                    custom_data4 = fs.readFileSync("./data/random_empat.txt", "utf-8");
+                                    custom_data5 = fs.readFileSync("./data/random_lima.txt", "utf-8");
                                     console.log('replying to', msg.key.remoteJid);
                                     return [4 /*yield*/, sock.readMessages([msg.key])
                                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
+                                        // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
                                     ];
                                 case 4:
                                     _j.sent();
                                     // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
-                                    return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(custom_data5) })];
-                                case 5:
-                                    // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
-                                    _j.sent();
+                                    // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
                                     return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(custom_data4) })
                                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_tour}`})
                                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_services}`})
                                     ];
-                                case 6:
+                                case 5:
+                                    // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
+                                    // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
                                     _j.sent();
-                                    _j.label = 7;
-                                case 7:
+                                    _j.label = 6;
+                                case 6:
                                     _i++;
                                     return [3 /*break*/, 3];
-                                case 8: return [2 /*return*/];
+                                case 7: return [2 /*return*/];
                             }
                         });
                     }); });
