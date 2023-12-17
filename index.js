@@ -101,40 +101,40 @@ function connectToWhatsApp() {
                                     if (events["labels.association"]) {
                                         console.log(events["labels.association"]);
                                     }
-                                    if (!events['messages.upsert']) return [3 /*break*/, 7];
+                                    if (!events['messages.upsert']) return [3 /*break*/, 8];
                                     upsert = events['messages.upsert'];
                                     console.log('recv messages ', upsert);
-                                    if (!(upsert.type === 'notify')) return [3 /*break*/, 7];
+                                    if (!(upsert.type === 'notify')) return [3 /*break*/, 8];
                                     _i = 0, _a = upsert.messages;
                                     _j.label = 3;
                                 case 3:
-                                    if (!(_i < _a.length)) return [3 /*break*/, 7];
+                                    if (!(_i < _a.length)) return [3 /*break*/, 8];
                                     msg = _a[_i];
-                                    if (!(!msg.key.fromMe && ((_h = msg.key.remoteJid) === null || _h === void 0 ? void 0 : _h.endsWith("g.us")))) return [3 /*break*/, 6];
+                                    if (!(!msg.key.fromMe && ((_h = msg.key.remoteJid) === null || _h === void 0 ? void 0 : _h.endsWith("g.us")))) return [3 /*break*/, 7];
                                     custom_data4 = fs.readFileSync("./data/random_empat.txt", "utf-8");
                                     custom_data5 = fs.readFileSync("./data/random_lima.txt", "utf-8");
                                     console.log('replying to', msg.key.remoteJid);
                                     return [4 /*yield*/, sock.readMessages([msg.key])
                                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
-                                        // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
                                     ];
                                 case 4:
                                     _j.sent();
                                     // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
-                                    // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
+                                    return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(custom_data5) })];
+                                case 5:
+                                    // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
+                                    _j.sent();
                                     return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, { text: "".concat(custom_data4) })
                                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_tour}`})
                                         // await sock!.sendMessage(msg.key.remoteJid!, {text: `${data_services}`})
                                     ];
-                                case 5:
-                                    // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
-                                    // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
-                                    _j.sent();
-                                    _j.label = 6;
                                 case 6:
+                                    _j.sent();
+                                    _j.label = 7;
+                                case 7:
                                     _i++;
                                     return [3 /*break*/, 3];
-                                case 7: return [2 /*return*/];
+                                case 8: return [2 /*return*/];
                             }
                         });
                     }); });
