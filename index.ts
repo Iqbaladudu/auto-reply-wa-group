@@ -269,14 +269,6 @@ async function connectToWhatsApp() {
       if (upsert.type === "notify") {
         for (const msg of upsert.messages) {
           if (!msg.key.fromMe && msg.key.remoteJid?.endsWith("g.us")) {
-            console.log(
-              msg.key.remoteJid,
-              events["labels.association"]?.association.chatId
-            );
-            const custom_data5 = fs.readFileSync(
-              "./data/random_lima.txt",
-              "utf-8"
-            );
             console.log("replying to", msg.key.remoteJid);
             await sock!.readMessages([msg.key]);
             // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
