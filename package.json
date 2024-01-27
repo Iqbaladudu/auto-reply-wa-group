@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",
-    "@whiskeysockets/baileys": "^6.5.0",
+    "@whiskeysockets/baileys": "^6.6.0",
     "axios": "^1.4.0",
     "get-uri": "^6.0.1",
     "jimp": "^0.22.8",
