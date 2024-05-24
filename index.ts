@@ -10,6 +10,7 @@ const custom_data1 = fs.readFileSync("./data/random_satu.txt", "utf-8");
 const custom_data2 = fs.readFileSync("./data/random_dua.txt", "utf-8");
 const custom_data3 = fs.readFileSync("./data/random_tiga.txt", "utf-8");
 const custom_data4 = fs.readFileSync("./data/random_empat.txt", "utf-8");
+const custom_data5 = fs.readFileSync("./data/random_lima.txt", "utf-8");
 
 const msgRetryCounterCache = new NodeCache();
 

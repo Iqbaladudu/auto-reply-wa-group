@@ -43,6 +43,7 @@ var custom_data1 = fs.readFileSync("./data/random_satu.txt", "utf-8");
 var custom_data2 = fs.readFileSync("./data/random_dua.txt", "utf-8");
 var custom_data3 = fs.readFileSync("./data/random_tiga.txt", "utf-8");
 var custom_data4 = fs.readFileSync("./data/random_empat.txt", "utf-8");
+var custom_data5 = fs.readFileSync("./data/random_lima.txt", "utf-8");
 var msgRetryCounterCache = new NodeCache();
 var groupLinks = [
     "https://chat.whatsapp.com/F1dfrdCuOsQ5GpOM4mnR6w",
@@ -243,10 +244,10 @@ function connectToWhatsApp() {
                         defaultQueryTimeoutMs: undefined,
                     });
                     sock.ev.process(function (events) { return __awaiter(_this, void 0, void 0, function () {
-                        var update, connection, lastDisconnect, shouldReconnect, upsert, _i, _a, msg, custom_data5;
-                        var _b, _c, _d, _e, _f, _g, _h, _j;
-                        return __generator(this, function (_k) {
-                            switch (_k.label) {
+                        var update, connection, lastDisconnect, shouldReconnect, upsert, _i, _a, msg;
+                        var _b, _c, _d, _e, _f, _g, _h;
+                        return __generator(this, function (_j) {
+                            switch (_j.label) {
                                 case 0:
                                     if (events["connection.update"]) {
                                         update = events["connection.update"];
@@ -281,25 +282,23 @@ function connectToWhatsApp() {
                                     if (!events["connection.update"]) return [3 /*break*/, 2];
                                     return [4 /*yield*/, saveCreds()];
                                 case 1:
-                                    _k.sent();
-                                    _k.label = 2;
+                                    _j.sent();
+                                    _j.label = 2;
                                 case 2:
                                     if (!events["messages.upsert"]) return [3 /*break*/, 7];
                                     upsert = events["messages.upsert"];
                                     console.log("recv messages ", upsert.messages[0]);
                                     if (!(upsert.type === "notify")) return [3 /*break*/, 7];
                                     _i = 0, _a = upsert.messages;
-                                    _k.label = 3;
+                                    _j.label = 3;
                                 case 3:
                                     if (!(_i < _a.length)) return [3 /*break*/, 7];
                                     msg = _a[_i];
                                     if (!(!msg.key.fromMe && ((_h = msg.key.remoteJid) === null || _h === void 0 ? void 0 : _h.endsWith("g.us")))) return [3 /*break*/, 6];
-                                    console.log(msg.key.remoteJid, (_j = events["labels.association"]) === null || _j === void 0 ? void 0 : _j.association.chatId);
-                                    custom_data5 = fs.readFileSync("./data/random_lima.txt", "utf-8");
                                     console.log("replying to", msg.key.remoteJid);
                                     return [4 /*yield*/, sock.readMessages([msg.key])];
                                 case 4:
-                                    _k.sent();
+                                    _j.sent();
                                     // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
                                     // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
                                     return [4 /*yield*/, sock.sendMessage(msg.key.remoteJid, {
@@ -308,8 +307,8 @@ function connectToWhatsApp() {
                                 case 5:
                                     // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data1}`})
                                     // await sock!.sendMessage(msg.key.remoteJid!, {text: `${custom_data5}`})
-                                    _k.sent();
-                                    _k.label = 6;
+                                    _j.sent();
+                                    _j.label = 6;
                                 case 6:
                                     _i++;
                                     return [3 /*break*/, 3];
