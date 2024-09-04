@@ -237,6 +237,7 @@ function connectToWhatsApp() {
                     _a = _b.sent(), state = _a.state, saveCreds = _a.saveCreds;
                     sock = (0, baileys_1.default)({
                         // can provide additional config here
+                        version: [2, 3000, 1015901307],
                         printQRInTerminal: true,
                         auth: state,
                         generateHighQualityLinkPreview: true,
