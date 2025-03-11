@@ -1,21 +1,25 @@
 {
-  "name": "baileys",
+  "name": "auto-reply-wa-group",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "To install dependencies:",
+  "homepage": "https://github.com/Iqbaladudu/auto-reply-wa-group#readme",
+  "bugs": {
+    "url": "https://github.com/Iqbaladudu/auto-reply-wa-group/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Iqbaladudu/auto-reply-wa-group.git"
+  },
+  "license": "ISC",
+  "author": "Muhammad Iqbal",
+  "type": "commonjs",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@adiwajshing/keyed-db": "^0.2.4",
-    "@whiskeysockets/baileys": "^6.7.7",
-    "axios": "^1.4.0",
-    "get-uri": "^6.0.1",
-    "jimp": "^0.22.8",
-    "link-preview-js": "^3.0.4",
-    "qrcode-terminal": "^0.12.0",
-    "ts-node": "^10.9.1"
+    "@whiskeysockets/baileys": "^6.7.16",
+    "node-cache": "^5.1.2",
+    "qrcode-terminal": "^0.12.0"
   }
 }

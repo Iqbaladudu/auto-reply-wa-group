@@ -1,13 +1,28 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 condition=true
+# Function to clean up and set up the environment
+setup_environment() {
+    echo "Setting up environment..."
+    rm -rf ./auth_info_baileys
+}
 
-while "${condition}"; do
-echo "Memulai bot..."
-echo
+# Function to run the Node.js script
+run_node_script() {
+    echo "Starting the bot..."
+    node --experimental-strip-types index.js
+}
 
-# run node js script
-rm -rf ./auth_info_baileys
-tsc index.ts
-node index.js
-sleep 1s; done
+# Main loop
+main() {
+    local condition=true
+
+    while $condition; do
+        setup_environment
+        run_node_script
+        sleep 1s
+    done
+}
+
+# Execute the main function
+main
