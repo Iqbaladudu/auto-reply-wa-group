@@ -1,33 +1,25 @@
-import makeWASocket, {
-    DisconnectReason,
-    useMultiFileAuthState,
-    WAMessage,
-    WASocket,
-} from "@whiskeysockets/baileys";
-import { Boom } from "@hapi/boom";
-import * as fs from "fs";
-import * as NodeCache from "node-cache";
+import { makeWASocket, DisconnectReason, useMultiFileAuthState} from "@whiskeysockets/baileys";
+import { readFileSync, rmSync, writeFile } from "fs";
+import NodeCache from "node-cache";
+import chalk from "chalk"
 
 export default class WhatsAppClient {
-    private custom_data4: string;
-    private msgRetryCounterCache: NodeCache;
-    private sock: WASocket | undefined;
-
     constructor() {
-        this.custom_data4 = fs.readFileSync("./data/iklan.txt", "utf-8");
+        this.text = readFileSync("./data/iklan.txt", "utf-8");
         this.msgRetryCounterCache = new NodeCache();
+        this.sock = undefined;
     }
 
-    private async handleConnectionUpdate(update: {
-        connection?: string;
-        lastDisconnect?: { error: any };
-    }) {
-        const { connection, lastDisconnect } = update;
+    async handleConnectionUpdate(update) {
+        const { connection, lastDisconnect, qr } = update;
+
+        if (qr) {
+            console.log("QR Code:", qr);
+        }
 
         if (connection === "close") {
             const shouldReconnect =
-                (lastDisconnect?.error as Boom)?.output?.statusCode !==
-                DisconnectReason.loggedOut;
+                lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
 
             console.log(
                 "connection closed due to ",
@@ -38,18 +30,17 @@ export default class WhatsAppClient {
 
             if (
                 shouldReconnect ||
-                (lastDisconnect?.error as Boom)?.output?.statusCode ===
-                DisconnectReason.timedOut
+                lastDisconnect?.error?.output?.statusCode === DisconnectReason.timedOut
             ) {
                 await this.connect();
             } else if (
-                (lastDisconnect?.error as Boom)?.output?.statusCode ===
-                DisconnectReason.loggedOut
+                lastDisconnect?.error?.output?.statusCode === DisconnectReason.loggedOut
             ) {
-                fs.rmSync("./auth_info_baileys", { recursive: true });
+                rmSync("./auth_info_baileys", { recursive: true });
             }
         } else if (connection === "open") {
-            fs.writeFile("./qrdata.txt", "", (err) => {
+            console.log("Connection opened");
+            writeFile("./qrdata.txt", "", (err) => {
                 if (err) {
                     console.error("An error occurred while creating the file:", err);
                     return;
@@ -59,26 +50,24 @@ export default class WhatsAppClient {
         }
     }
 
-    private async handleMessagesUpsert(upsert: {
-        messages: WAMessage[];
-        type: string;
-    }) {
+    async handleMessagesUpsert(upsert) {
         if (upsert.type === "notify") {
             for (const msg of upsert.messages) {
-                console.log(msg)
-                if (!msg.key.fromMe && msg.key.remoteJid?.endsWith("s.whatsapp.net")) {
-                    console.log("replying to", msg.key.remoteJid);
-                    await this.sock!.readMessages([msg.key]);
-                    await this.sock!.sendMessage(msg.key.remoteJid!, {
-                        text: `${this.custom_data4}`,
+                if (!msg.key.fromMe && msg.key.remoteJid?.endsWith("g.us")) {
+                    console.info(chalk.bgYellow("new message from: ", msg.key.remoteJid));
+                    console.info(chalk.bgGreen("replying to", msg.key.remoteJid));
+                    await this.sock.readMessages([msg.key]);
+                    await this.sock.sendMessage(msg.key.remoteJid, {
+                        text: `${this.text}`,
                     });
                 }
             }
         }
     }
 
-    public async connect(): Promise<WASocket> {
+    async connect() {
         const { state, saveCreds } = await useMultiFileAuthState("auth_info_baileys");
+
         this.sock = makeWASocket({
             version: [2, 3000, 1015901307],
             printQRInTerminal: true,
@@ -86,6 +75,13 @@ export default class WhatsAppClient {
             generateHighQualityLinkPreview: true,
             msgRetryCounterCache: this.msgRetryCounterCache,
             defaultQueryTimeoutMs: undefined,
+        });
+
+        // Add QR code listener
+        this.sock.ev.on("connection.update", (update) => {
+            if (update.qr) {
+                console.log("QR Code:", update.qr);
+            }
         });
 
         this.sock.ev.process(async (events) => {
@@ -102,7 +98,7 @@ export default class WhatsAppClient {
         return this.sock;
     }
 
-    public getSocket(): WASocket | undefined {
+    getSocket() {
         return this.sock;
     }
 }
