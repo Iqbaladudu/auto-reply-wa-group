@@ -1,10 +1,6 @@
 import WhatsAppClient from "./src/whatsapp_client.js";
 import { mkdir } from "fs/promises";
-import {
-  makeWASocket,
-  DisconnectReason,
-  useMultiFileAuthState,
-} from "@whiskeysockets/baileys";
+import { makeWASocket, DisconnectReason, useMultiFileAuthState } from "baileys";
 import { writeFile, rmSync } from "fs";
 
 // Get instance number from command line arguments

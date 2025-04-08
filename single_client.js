@@ -1,10 +1,6 @@
 import { readFileSync, rmSync, writeFile } from "fs";
 import { mkdir } from "fs/promises";
-import {
-  makeWASocket,
-  DisconnectReason,
-  useMultiFileAuthState,
-} from "@whiskeysockets/baileys";
+import { makeWASocket, DisconnectReason, useMultiFileAuthState } from "baileys";
 import NodeCache from "node-cache";
 import qrcode from "qrcode";
 import path from "path";
@@ -12,12 +8,15 @@ import pino from "pino";
 
 // Get instance number from command line arguments
 const instanceId = parseInt(process.argv[2]) || 1;
-const totalInstances = parseInt(process.argv[3]) || 4; // Total instances dari argument
+const totalInstances = parseInt(process.argv[3]) || 4;
 const authDir = `./auth_info_baileys_${instanceId}`;
+
+// Set untuk melacak grup bermasalah
+const problematicGroups = new Set();
 
 // Create a proper logger
 const logger = pino({
-  level: process.env.LOG_LEVEL || "warn",
+  level: "error",
 });
 
 async function startWhatsAppBot() {
@@ -36,9 +35,10 @@ async function startWhatsAppBot() {
 
   const sock = makeWASocket({
     version: [2, 3000, 1015901307],
-    printQRInTerminal: true, // Tampilkan QR di terminal
+    printQRInTerminal: true,
     auth: state,
-    generateHighQualityLinkPreview: true,
+    generateHighQualityLinkPreview: false, // Disable link preview
+    linkPreviewImageThumbnailWidth: 0,
     msgRetryCounterCache: msgRetryCounterCache,
     defaultQueryTimeoutMs: undefined,
     logger: logger,
@@ -51,7 +51,6 @@ async function startWhatsAppBot() {
     if (qr) {
       console.log(`[Instance ${instanceId}] Scan QR code below:`);
 
-      // Opsional: Simpan QR code sebagai file
       const qrFilePath = path.join(
         "./qrcodes",
         `qrcode_instance_${instanceId}.png`,
@@ -93,32 +92,112 @@ async function startWhatsAppBot() {
       console.log(
         `\n[Instance ${instanceId}] Connection established! Bot is running.\n`,
       );
+      problematicGroups.clear(); // Reset daftar grup bermasalah saat koneksi baru
     }
   }
 
-  // Handler untuk pesan masuk dengan distribusi
+  // Fungsi untuk mencoba memperbaiki kunci grup
+  async function attemptKeyRepair(jid) {
+    if (problematicGroups.has(jid)) {
+      return; // Sudah dalam proses perbaikan
+    }
+
+    problematicGroups.add(jid);
+    console.log(
+      `[Instance ${instanceId}] Attempting to repair keys for ${jid}`,
+    );
+
+    try {
+      // Coba dapatkan metadata grup untuk memicu sinkronisasi kunci
+      await sock.groupMetadata(jid);
+
+      // Tunggu beberapa saat
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+
+      console.log(`[Instance ${instanceId}] Key repair attempted for ${jid}`);
+    } catch (err) {
+      console.error(`[Instance ${instanceId}] Key repair failed:`, err);
+    } finally {
+      // Hapus dari daftar setelah 30 detik
+      setTimeout(() => {
+        problematicGroups.delete(jid);
+      }, 30000);
+    }
+  }
+
+  // Handler untuk pesan masuk
   async function handleMessagesUpsert(upsert) {
-    if (upsert.type === "notify") {
-      for (const msg of upsert.messages) {
-        if (!msg.key.fromMe && msg.key.remoteJid?.endsWith("g.us")) {
-          // Ekstrak ID grup untuk distribusi
-          const groupId = msg.key.remoteJid.split("@")[0];
-          const lastDigits = groupId.slice(-6);
-          const numericId = parseInt(lastDigits, 10);
+    try {
+      if (upsert.type === "notify") {
+        for (const msg of upsert.messages) {
+          if (!msg.key.fromMe && msg.key.remoteJid?.endsWith("g.us")) {
+            // Ekstrak ID grup untuk distribusi
+            const groupId = msg.key.remoteJid.split("@")[0];
+            const lastDigits = groupId.slice(-6);
+            const numericId = parseInt(lastDigits, 10);
 
-          // Hitung distribusi
-          const targetInstance = (numericId % totalInstances) + 1;
+            // Hitung distribusi
+            const targetInstance = (numericId % totalInstances) + 1;
 
-          // Tangani hanya jika untuk instance ini
-          if (targetInstance === instanceId) {
-            console.log(
-              `[Instance ${instanceId}] Replying to message from: ${msg.key.remoteJid}`,
-            );
-            await sock.readMessages([msg.key]);
-            await sock.sendMessage(msg.key.remoteJid, { text });
+            // Tangani hanya jika untuk instance ini
+            if (targetInstance === instanceId) {
+              try {
+                console.log(
+                  `[Instance ${instanceId}] Processing message from: ${msg.key.remoteJid}`,
+                );
+
+                // Tambahkan delay untuk mengurangi rate limiting
+                await new Promise((resolve) =>
+                  setTimeout(resolve, 500 + Math.random() * 1000),
+                );
+
+                // Baca pesan
+                await sock.readMessages([msg.key]);
+
+                // Tambahkan delay lagi sebelum mengirim balasan
+                await new Promise((resolve) =>
+                  setTimeout(resolve, 700 + Math.random() * 1500),
+                );
+
+                // Kirim pesan balasan
+                await sock.sendMessage(msg.key.remoteJid, { text });
+
+                console.log(
+                  `[Instance ${instanceId}] Successfully replied to: ${msg.key.remoteJid}`,
+                );
+              } catch (err) {
+                console.error(
+                  `[Instance ${instanceId}] Error with message:`,
+                  err.message,
+                );
+
+                // Tangani error dekripsi
+                if (
+                  err.message.includes("SenderKeyRecord") ||
+                  err.message.includes("decrypt") ||
+                  err.message.includes("No session")
+                ) {
+                  console.log(
+                    `[Instance ${instanceId}] Decryption error for ${msg.key.remoteJid}, attempting repair`,
+                  );
+                  await attemptKeyRepair(msg.key.remoteJid);
+                } else if (err.data === 429) {
+                  // Rate limiting - tunggu lebih lama
+                  console.log(
+                    `[Instance ${instanceId}] Rate limited, waiting 30 seconds`,
+                  );
+                  await new Promise((resolve) => setTimeout(resolve, 30000));
+                }
+              }
+            }
           }
         }
       }
+    } catch (error) {
+      console.error(
+        `[Instance ${instanceId}] Error in message handler:`,
+        error,
+      );
     }
   }
 
@@ -130,14 +209,14 @@ async function startWhatsAppBot() {
   return sock;
 }
 
-// Mulai bot
+// Start bot
 console.log(
   `\n=== Starting WhatsApp Bot (Instance ${instanceId} of ${totalInstances}) ===\n`,
 );
 console.log(
   `This instance will handle approximately 1/${totalInstances} of all groups`,
 );
-console.log(`A QR code will appear below when ready to scan\n`);
+console.log(`Enhanced error handling for decryption issues is enabled\n`);
 
 startWhatsAppBot()
   .then(() => console.log(`[Instance ${instanceId}] Bot initialized`))

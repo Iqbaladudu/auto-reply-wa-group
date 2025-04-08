@@ -1,8 +1,4 @@
-import {
-  makeWASocket,
-  DisconnectReason,
-  useMultiFileAuthState,
-} from "@whiskeysockets/baileys";
+import { makeWASocket, DisconnectReason, useMultiFileAuthState } from "baileys";
 import { readFileSync, rmSync, writeFile } from "fs";
 import NodeCache from "node-cache";
 import chalk from "chalk";
