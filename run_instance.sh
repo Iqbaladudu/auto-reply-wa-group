@@ -20,4 +20,4 @@ export LOG_LEVEL=warn  # Options: info, warn, error, silent
 # Run the instance
 echo "Starting WhatsApp bot instance $INSTANCE of $TOTAL"
 echo "---------------------------------------------"
-node --experimental-strip-types single_client.js "$INSTANCE" "$TOTAL"
+node single_client.js "$INSTANCE" "$TOTAL"

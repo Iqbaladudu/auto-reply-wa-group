@@ -34,7 +34,7 @@ async function startWhatsAppBot() {
   const { state, saveCreds } = await useMultiFileAuthState(authDir);
 
   const sock = makeWASocket({
-    version: [2, 3000, 1015901307],
+    version: [2, 3000, 1023223821],
     printQRInTerminal: true,
     auth: state,
     generateHighQualityLinkPreview: false, // Disable link preview

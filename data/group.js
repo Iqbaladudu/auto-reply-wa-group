@@ -1,4 +1,4 @@
-export const groupLinks = [
+const groupLinks = [
     "https://chat.whatsapp.com/F1dfrdCuOsQ5GpOM4mnR6w",
     "https://chat.whatsapp.com/DnIHDrnkBmoLcBQBcmjGM6",
     "https://chat.whatsapp.com/D2U2vYJYCUh9JHDTGVySZz",
@@ -179,3 +179,5 @@ export const groupLinks = [
     "https://chat.whatsapp.com/LgZm3tTmToTK33Bu8MqLAj",
     "https://chat.whatsapp.com/GAIZoer4X0A6zj0SJaobUa",
 ];
+
+export default groupLinks;
