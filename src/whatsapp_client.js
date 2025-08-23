@@ -1,9 +1,10 @@
 import { makeWASocket, DisconnectReason, useMultiFileAuthState } from "baileys";
-import { readFileSync, rmSync, writeFile } from "fs";
+import { readFileSync, rmSync, writeFile, existsSync } from "fs";
 import NodeCache from "node-cache";
 import chalk from "chalk";
 import pino from "pino";
 import groupLinks from "../data/group.js"; // Import default
+import qrcode from "qrcode-terminal";
 
 // Logger
 const logger = pino({
@@ -14,52 +15,85 @@ export default class WhatsAppClient {
   /**
    * @param {Object} options
    * @param {boolean} options.enableReply - Aktifkan auto-reply pesan grup
+   * @param {string} options.instanceId - Instance ID for logging
    */
-  constructor({ enableReply = true } = {}) {
-    this.text = readFileSync("./data/iklan.txt", "utf-8");
+  constructor({ enableReply = true, instanceId = "default" } = {}) {
+    // Check if iklan.txt file exists
+    const iklanPath = "./data/iklan.txt";
+    if (!existsSync(iklanPath)) {
+      throw new Error(`Advertisement file not found: ${iklanPath}. Please create this file with your message content.`);
+    }
+    
+    try {
+      this.text = readFileSync(iklanPath, "utf-8");
+    } catch (error) {
+      throw new Error(`Failed to read advertisement file: ${error.message}`);
+    }
+    
     this.msgRetryCounterCache = new NodeCache();
     this.sock = undefined;
     this.groupInviteLinks = groupLinks;
     this.enableReply = enableReply;
+    this.instanceId = instanceId;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
   }
 
   async handleConnectionUpdate(update) {
     const { connection, lastDisconnect, qr } = update;
 
     if (qr) {
-      console.log("QR Code:", qr);
+      console.log(`[Instance ${this.instanceId}] Scan QR code below:`);
+      qrcode.generate(qr, { small: true });
     }
 
     if (connection === "close") {
-      const shouldReconnect =
-        lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+      const statusCode = lastDisconnect?.error?.output?.statusCode;
+      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
       console.log(
-        "connection closed due to ",
-        lastDisconnect?.error,
-        ", reconnecting ",
-        shouldReconnect,
+        chalk.red(`[Instance ${this.instanceId}] Connection closed due to:`),
+        lastDisconnect?.error?.message || "Unknown error",
+        `Status: ${statusCode}`,
+        `Reconnecting: ${shouldReconnect}`
       );
 
-      if (
-        shouldReconnect ||
-        lastDisconnect?.error?.output?.statusCode === DisconnectReason.timedOut
-      ) {
-        await this.connect();
-      } else if (
-        lastDisconnect?.error?.output?.statusCode === DisconnectReason.loggedOut
-      ) {
-        rmSync("./auth_info_baileys", { recursive: true });
+      if (shouldReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
+        this.reconnectAttempts++;
+        const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000); // Exponential backoff, max 30s
+        console.log(chalk.yellow(`[Instance ${this.instanceId}] Reconnecting in ${delay/1000}s... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`));
+        
+        setTimeout(async () => {
+          try {
+            await this.connect();
+          } catch (error) {
+            console.error(chalk.red(`[Instance ${this.instanceId}] Reconnection failed:`), error.message);
+          }
+        }, delay);
+      } else if (statusCode === DisconnectReason.loggedOut) {
+        console.log(chalk.yellow(`[Instance ${this.instanceId}] Logged out, removing auth session...`));
+        try {
+          rmSync("./auth_info_baileys", { recursive: true });
+        } catch (error) {
+          console.error("Error removing auth session:", error.message);
+        }
+        this.reconnectAttempts = 0; // Reset for fresh start
+      } else {
+        console.log(chalk.red(`[Instance ${this.instanceId}] Max reconnection attempts reached or permanent error`));
       }
     } else if (connection === "open") {
-      console.log("Connection opened");
+      console.log(chalk.green(`[Instance ${this.instanceId}] Connection opened successfully!`));
+      this.reconnectAttempts = 0; // Reset on successful connection
+      
       writeFile("./qrdata.txt", "", (err) => {
         if (err) {
           console.error("An error occurred while creating the file:", err);
           return;
         }
-        console.log("File created successfully!");
+        console.log("QR data file created successfully!");
       });
+    } else if (connection === "connecting") {
+      console.log(chalk.blue(`[Instance ${this.instanceId}] Connecting to WhatsApp...`));
     }
   }
 
@@ -83,21 +117,19 @@ export default class WhatsAppClient {
       await useMultiFileAuthState("auth_info_baileys");
 
     this.sock = makeWASocket({
-      version: [2, 3000, 1015901307],
-      printQRInTerminal: true,
       auth: state,
       generateHighQualityLinkPreview: true,
       msgRetryCounterCache: this.msgRetryCounterCache,
-      defaultQueryTimeoutMs: undefined,
       logger: logger,
+      markOnlineOnConnect: false,
+      syncFullHistory: false,
+      browser: ["WhatsApp Bot", "Chrome", "4.0.0"],
+      connectTimeoutMs: 60000,
+      defaultQueryTimeoutMs: 0, // Disable timeout
+      keepAliveIntervalMs: 10000,
+      // Remove version specification to use default
     });
 
-    // QR code listener
-    this.sock.ev.on("connection.update", (update) => {
-      if (update.qr) {
-        console.log("QR Code:", update.qr);
-      }
-    });
 
     this.sock.ev.process(async (events) => {
       if (events["connection.update"]) {
