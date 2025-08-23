@@ -18,8 +18,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "baileys": "^6.7.16",
     "asynckit": "^0.4.0",
+    "baileys": "^6.7.18",
     "chalk": "^5.4.1",
     "node-cache": "^5.1.2",
     "pino": "^9.6.0",

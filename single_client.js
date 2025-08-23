@@ -1,8 +1,8 @@
-import { readFileSync, rmSync, writeFile } from "fs";
+import { readFileSync, rmSync, readdirSync } from "fs";
 import { mkdir } from "fs/promises";
 import { makeWASocket, DisconnectReason, useMultiFileAuthState } from "baileys";
 import NodeCache from "node-cache";
-import qrcode from "qrcode";
+import qrcode from "qrcode-terminal";
 import path from "path";
 import pino from "pino";
 
@@ -22,20 +22,32 @@ const logger = pino({
 async function startWhatsAppBot() {
   try {
     await mkdir(authDir, { recursive: true });
-    await mkdir("./qrcodes", { recursive: true });
+    // await mkdir("./qrcodes", { recursive: true });
   } catch (err) {
     if (err.code !== "EEXIST") {
       console.error(`Failed to create directory: ${err}`);
     }
   }
 
-  const text = readFileSync("./data/iklan.txt", "utf-8");
+  let iklanList = [];
+  try {
+    const iklanFiles = readdirSync("./data")
+      .filter((f) => f.endsWith(".txt"))
+      .sort(); // urutkan jika ingin urutan konsisten
+    iklanList = iklanFiles.map((file) => readFileSync(`./data/${file}`, "utf-8"));
+    if (iklanList.length === 0) {
+      console.warn("Tidak ada file iklan ditemukan di folder ./data");
+    }
+  } catch (e) {
+    console.error("Gagal membaca file iklan:", e);
+  }
+
+  let iklanIndex = 0;
+
   const msgRetryCounterCache = new NodeCache();
   const { state, saveCreds } = await useMultiFileAuthState(authDir);
 
   const sock = makeWASocket({
-    version: [2, 3000, 1023223821],
-    printQRInTerminal: true,
     auth: state,
     generateHighQualityLinkPreview: false, // Disable link preview
     linkPreviewImageThumbnailWidth: 0,
@@ -50,22 +62,7 @@ async function startWhatsAppBot() {
 
     if (qr) {
       console.log(`[Instance ${instanceId}] Scan QR code below:`);
-
-      const qrFilePath = path.join(
-        "./qrcodes",
-        `qrcode_instance_${instanceId}.png`,
-      );
-      await qrcode.toFile(qrFilePath, qr, {
-        color: {
-          dark: "#000000",
-          light: "#ffffff",
-        },
-        scale: 8,
-      });
-
-      console.log(
-        `[Instance ${instanceId}] QR Code also saved to: ${qrFilePath}`,
-      );
+      qrcode.generate(qr, { small: true });
     }
 
     if (connection === "close") {
@@ -158,9 +155,14 @@ async function startWhatsAppBot() {
                 await new Promise((resolve) =>
                   setTimeout(resolve, 700 + Math.random() * 1500),
                 );
+                
+                const iklanToSend = iklanList.length > 0
+                  ? iklanList[iklanIndex]
+                  : "Iklan belum tersedia.";
+                iklanIndex = (iklanIndex + 1) % (iklanList.length || 1);
 
                 // Kirim pesan balasan
-                await sock.sendMessage(msg.key.remoteJid, { text });
+                await sock.sendMessage(msg.key.remoteJid, { text: iklanToSend });
 
                 console.log(
                   `[Instance ${instanceId}] Successfully replied to: ${msg.key.remoteJid}`,
