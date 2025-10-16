@@ -1,7 +1,7 @@
 {
   "name": "auto-reply-wa-group",
-  "version": "1.0.0",
-  "description": "To install dependencies:",
+  "version": "2.0.0",
+  "description": "Interactive CLI-based WhatsApp Auto Reply Bot with modular architecture",
   "homepage": "https://github.com/Iqbaladudu/auto-reply-wa-group#readme",
   "bugs": {
     "url": "https://github.com/Iqbaladudu/auto-reply-wa-group/issues"
@@ -13,14 +13,31 @@
   "license": "ISC",
   "author": "Muhammad Iqbal",
   "type": "module",
-  "main": "index.js",
+  "main": "src/index.js",
+  "bin": {
+    "wa-bot": "./src/index.js"
+  },
   "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "instance": "node src/instance-runner.js",
+    "launch": "bash launch-instances.sh",
+    "launch-single": "bash launch-single-instance.sh",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "auto-reply",
+    "cli",
+    "automation"
+  ],
   "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.20",
     "asynckit": "^0.4.0",
     "baileys": "^6.7.18",
     "chalk": "^5.4.1",
+    "inquirer": "^9.3.8",
     "node-cache": "^5.1.2",
     "pino": "^9.6.0",
     "qrcode": "^1.5.4",
