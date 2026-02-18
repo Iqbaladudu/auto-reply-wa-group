@@ -33,9 +33,9 @@
     "automation"
   ],
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.20",
+    "@whiskeysockets/baileys": "^7.0.0-rc.9",
     "asynckit": "^0.4.0",
-    "baileys": "^6.7.18",
+    "baileys": "^7.0.0-rc.9",
     "chalk": "^5.4.1",
     "inquirer": "^9.3.8",
     "node-cache": "^5.1.2",

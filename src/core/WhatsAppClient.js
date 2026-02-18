@@ -5,7 +5,7 @@
 
 import { rmSync, readdirSync, readFileSync } from 'fs';
 import { mkdir } from 'fs/promises';
-import { makeWASocket, DisconnectReason, useMultiFileAuthState } from 'baileys';
+import { makeWASocket, DisconnectReason, useMultiFileAuthState, isPnUser } from 'baileys';
 import NodeCache from 'node-cache';
 import qrcode from 'qrcode-terminal';
 import config from '../config/config.js';
@@ -136,7 +136,14 @@ class WhatsAppClient {
         for (const msg of upsert.messages) {
           if (!msg.key.fromMe && msg.key.remoteJid?.endsWith('g.us')) {
             // Extract group ID for distribution
-            const groupId = msg.key.remoteJid.split('@')[0];
+            let jidForRouting = msg.key.remoteJid;
+
+            // If remoteJid is an LID and remoteJidAlt exists (implies remoteJidAlt is a PN), use remoteJidAlt for routing
+            if (!isPnUser(msg.key.remoteJid) && msg.key.remoteJidAlt) {
+              jidForRouting = msg.key.remoteJidAlt;
+            }
+            
+            const groupId = jidForRouting.split('@')[0];
             const lastDigits = groupId.slice(-6);
             const numericId = parseInt(lastDigits, 10);
 
@@ -245,7 +252,6 @@ class WhatsAppClient {
         msgRetryCounterCache: this.msgRetryCounterCache,
         defaultQueryTimeoutMs: undefined,
         logger: this.logger.getPinoLogger(),
-        version: [2, 3000, 1028442591], 
       });
 
       // Register event handlers
